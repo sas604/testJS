@@ -11,4 +11,13 @@ const addItemToCart = (username, item) => {
   return newItems;
 };
 
-module.exports = { addItemToCart, carts };
+const compliesToLimit = (cart) => {
+  const unitPerItem = cart.reduce((itemMap, itemName) => {
+    const quantity = (itemMap[itemName] || 0) + 1;
+    return { ...itemMap, [itemName]: quantity };
+  }, {});
+
+  return Object.values(unitPerItem).every((quantity) => quantity <= 3);
+};
+
+module.exports = { addItemToCart, carts, compliesToLimit };
