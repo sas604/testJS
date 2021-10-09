@@ -2,6 +2,7 @@ const {
   inventory,
   addToInventory,
   getInventory,
+  removeFromInventory,
 } = require('./inventoryController');
 const logger = require('./logger');
 beforeEach(() => inventory.set('cheesecake', 0));
@@ -49,5 +50,21 @@ describe('getInventory', () => {
 
     expect(firstArg).toEqual({ contents: { cheesecake: 2 } });
     expect(secondArg).toEqual('Inventory items fetched');
+  });
+});
+
+describe('removeFromInventory', () => {
+  test('removing unavailable item from inventory', () => {
+    inventory.set('cheesecake', 0);
+    try {
+      removeFromInventory('cheesecake');
+    } catch (e) {
+      const expectedError = new Error(`cheesecake is unavailable`);
+      expectedError.code = 400;
+
+      expect(e).toEqual(expectedError);
+    }
+    expect(inventory.get('cheesecake')).toEqual(0);
+    expect.assertions(2);
   });
 });

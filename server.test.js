@@ -1,4 +1,6 @@
-const { app, resetState, inventory, carts } = require('./server');
+const { app, resetState } = require('./server');
+const { carts, addItemToCart } = require('./cartControler');
+const { inventory } = require('./inventoryController');
 const fetch = require('isomorphic-fetch');
 
 const apiRoot = 'http://localhost:4000';
@@ -30,7 +32,7 @@ describe('addItem', () => {
   test('soldout items', async () => {
     inventory.set('cheesecake', 0);
     const failedAddItem = await addItem('lucas', 'cheesecake');
-    expect(failedAddItem.status).toBe(404);
+    expect(failedAddItem.status).toBe(400);
   });
 });
 

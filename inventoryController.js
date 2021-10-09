@@ -2,6 +2,15 @@ const logger = require('./logger');
 
 const inventory = new Map();
 
+const removeFromInventory = (item) => {
+  if (!inventory.has(item) || !inventory.get(item) > 0) {
+    const err = new Error(`${item} is unavailable`);
+    err.code = 400;
+    throw err;
+  }
+  inventory.set(item, inventory.get(item) - 1);
+};
+
 const addToInventory = (item, n) => {
   if (typeof n !== 'number') throw new Error('Quantity must be a number');
   const currentQuantity = inventory.get(item) || 0;
@@ -27,4 +36,9 @@ const getInventory = () => {
   };
 };
 
-module.exports = { inventory, addToInventory, getInventory };
+module.exports = {
+  inventory,
+  addToInventory,
+  getInventory,
+  removeFromInventory,
+};
