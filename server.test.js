@@ -3,6 +3,7 @@ const { carts } = require('./cartControler');
 const { inventory } = require('./inventoryController');
 const request = require('supertest');
 const { users, hashPasswords } = require('./authenticationController');
+const { db, closeConnection } = require('./dbConnection');
 
 const user = 'test_user';
 const password = 'test_password';
@@ -14,7 +15,8 @@ const createUser = () =>
     passwordHash: hashPasswords(password),
   });
 
-afterEach(() => users.clear());
+beforeEach(() => db('users').truncate());
+afterAll(() => closeConnection());
 
 describe('add items to cart', () => {
   beforeEach(createUser);
@@ -44,17 +46,23 @@ describe('create accounts', () => {
     expect(response.body).toEqual({
       message: 'test_user created successfuly.',
     });
-
-    expect(users.get('test_user')).toEqual({
+    const user = await db('users')
+      .select()
+      .where({ username: 'test_user' })
+      .first();
+    expect(user).toEqual({
+      id: 1,
+      username: 'test_user',
       email: 'test_user@example.com',
       passwordHash: hashPasswords('a_password'),
     });
   });
 
   test('creating account with name alredy exists', async () => {
-    users.set('test_user', {
+    await db('users').insert({
+      username: 'test_user',
       email: 'test_user@example.com',
-      password: hashPasswords('a_password'),
+      passwordHash: hashPasswords('test_password'),
     });
     const response = await request(app)
       .put('/users/test_user')

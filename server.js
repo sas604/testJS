@@ -3,11 +3,10 @@ const Router = require('koa-router');
 const { addItemToCart } = require('./cartControler');
 const bodyParser = require('koa-body-parser');
 const {
-  users,
   hashPasswords,
   authenticationMiddleware,
 } = require('./authenticationController');
-
+const { db } = require('./dbConnection');
 const app = new Koa();
 const router = new Router();
 app.use(bodyParser());
@@ -34,17 +33,24 @@ router.post('/carts/:username/items/:item', (ctx) => {
     }
   }
 });
-router.put('/users/:username', (ctx) => {
+router.put('/users/:username', async (ctx) => {
   const { username } = ctx.params;
   const { email, password } = ctx.request.body;
-  const userAlredyExists = users.has(username);
+  const userAlredyExists = await db('users')
+    .select()
+    .where({ username })
+    .first();
   if (userAlredyExists) {
     ctx.body = { message: `${username} alredy exists` };
     ctx.status = 409;
     return;
   }
+  await db('users').insert({
+    username,
+    email,
+    passwordHash: hashPasswords(password),
+  });
 
-  users.set(username, { email, passwordHash: hashPasswords(password) });
   return (ctx.body = { message: `${username} created successfuly.` });
 });
 app.use(router.routes());

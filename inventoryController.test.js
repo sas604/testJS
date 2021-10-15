@@ -1,13 +1,14 @@
+const { db, closeConnection } = require('./dbConnection');
 const {
-  inventory,
   addToInventory,
   getInventory,
   removeFromInventory,
 } = require('./inventoryController');
 const logger = require('./logger');
-beforeEach(() => inventory.set('cheesecake', 0));
+afterEach(() => db('inventory').truncate());
 beforeAll(() => jest.spyOn(logger, 'logInfo').mockImplementation(jest.fn()));
 afterEach(() => logger.logInfo.mockClear());
+afterAll(() => closeConnection());
 
 describe('addToInventory', () => {
   beforeEach(() => {
@@ -16,9 +17,9 @@ describe('addToInventory', () => {
     });
   });
 
-  test('Logging new items', () => {
+  test('Logging new items', async () => {
     jest.spyOn(logger, 'logInfo');
-    addToInventory('cheesecake', 2);
+    await addToInventory('cheesecake', 2);
     expect(logger.logInfo.mock.calls).toHaveLength(1);
 
     const [firstArg, secondArg] = logger.logInfo.mock.calls[0];
@@ -29,42 +30,54 @@ describe('addToInventory', () => {
     });
     expect(secondArg).toEqual('Item added to the inventory');
   });
-  test('cancels operation for invalid quantities', () => {
-    expect(() => addToInventory('cheesecake', 'not a number')).toThrow();
-    expect(inventory.get('cheesecake')).toBe(0);
-    expect(Array.from(inventory.entries())).toHaveLength(1);
+  test('cancels operation for invalid quantities', async () => {
+    await db('inventory').insert({ itemName: 'cheesecake', quantity: 0 });
+    await expect(
+      addToInventory('cheesecake', 'not a number')
+    ).rejects.toThrow();
+    const inventory = await db('inventory')
+      .select()
+      .where({ itemName: 'cheesecake' })
+      .first();
+    expect(inventory.quantity).toBe(0);
   });
 });
 
 describe('getInventory', () => {
-  test('generatedAt in the past', () => {
-    const result = getInventory();
+  beforeEach(
+    async () =>
+      await db('inventory').insert({ itemName: 'cheesecake', quantity: 3 })
+  );
+  test('generatedAt in the past', async () => {
+    const result = await getInventory();
     const currentTime = new Date(Date.now() + 1);
     expect(result.generatedAt).toBeBefore(currentTime);
   });
-  test('logging fetches', () => {
-    inventory.set('cheesecake', 2);
-    getInventory('cheesecake', 2);
+  test('logging fetches', async () => {
+    await getInventory();
     expect(logger.logInfo.mock.calls).toHaveLength(1);
     const [firstArg, secondArg] = logger.logInfo.mock.calls[0];
-
-    expect(firstArg).toEqual({ contents: { cheesecake: 2 } });
+    expect(firstArg).toEqual({ contents: { cheesecake: 3 } });
     expect(secondArg).toEqual('Inventory items fetched');
   });
 });
 
 describe('removeFromInventory', () => {
-  test('removing unavailable item from inventory', () => {
-    inventory.set('cheesecake', 0);
+  test('removing unavailable item from inventory', async () => {
+    await db('inventory').insert({ itemName: 'cheesecake', quantity: 0 });
     try {
-      removeFromInventory('cheesecake');
+      await removeFromInventory('cheesecake');
     } catch (e) {
       const expectedError = new Error(`cheesecake is unavailable`);
       expectedError.code = 400;
 
       expect(e).toEqual(expectedError);
     }
-    expect(inventory.get('cheesecake')).toEqual(0);
+    const itemQuantity = await db('inventory')
+      .select()
+      .where({ itemName: 'cheesecake' })
+      .first();
+    expect(itemQuantity.quantity).toBe(0);
     expect.assertions(2);
   });
 });

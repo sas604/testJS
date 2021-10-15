@@ -1,11 +1,12 @@
 const crypto = require('crypto');
 const {
   hashPasswords,
-  users,
   credentialsAreValid,
   authenticationMiddleware,
 } = require('./authenticationController');
-afterEach(() => users.clear());
+const { db, closeConnection } = require('./dbConnection');
+beforeEach(() => db('users').truncate());
+afterAll(() => closeConnection());
 
 describe('hashPassword', () => {
   test('hashing passwords', () => {
@@ -20,13 +21,14 @@ describe('hashPassword', () => {
 });
 
 describe('credentialsAreValid', () => {
-  test('validating credentials', () => {
-    users.set('test_user', {
-      email: 'test_user@example.org',
+  test('validating credentials', async () => {
+    await db('users').insert({
+      username: 'test_user',
+      email: 'test_user@example.com',
       passwordHash: hashPasswords('test_password'),
     });
 
-    const hasValidCredentials = credentialsAreValid(
+    const hasValidCredentials = await credentialsAreValid(
       'test_user',
       'test_password'
     );
@@ -52,8 +54,9 @@ describe('authenticationMiddleware', () => {
     });
   });
   test('call next if the credentials are valid', async () => {
-    users.set('test_user', {
-      email: 'test_user@example.org',
+    await db('users').insert({
+      username: 'test_user',
+      email: 'test_user@example.com',
       passwordHash: hashPasswords('test_password'),
     });
     const fakeAuth = Buffer.from('test_user:test_password').toString('base64');
