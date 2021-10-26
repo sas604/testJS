@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "Cart.js",
   "scripts": {
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "build": "browserify public/main.js -o public/bundle.js"
   },
   "keywords": [],
   "author": "",
@@ -11,6 +12,7 @@
   "description": "",
   "dependencies": {
     "express": "^4.17.1",
+    "jsdom": "^18.0.0",
     "knex": "^0.95.11",
     "koa": "^2.13.1",
     "koa-body-parser": "^1.1.2",
@@ -19,6 +21,7 @@
     "sqlite3": "^5.0.2"
   },
   "devDependencies": {
+    "browserify": "^17.0.0",
     "eslint": "^8.0.0",
     "isomorphic-fetch": "^2.2.1",
     "jest": "^27.2.0",
