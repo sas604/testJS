@@ -1,10 +1,7 @@
-let data = { cheesecake: 0 };
+const { addItem, data } = require('./inventoryController');
+const { updateItemList } = require('./domController');
 
-const incrementCount = () => {
-  data.cheesecake++;
-  window.document.getElementById('count').innerHTML = data.cheesecake;
-};
-const incrementButton = window.document.getElementById('increment-button');
-incrementButton.addEventListener('click', incrementCount);
-
-module.exports = { data, incrementCount };
+addItem('cheesecake', 3);
+addItem('apple pie', 8);
+addItem('carrot cake', 7);
+updateItemList(data.inventory);

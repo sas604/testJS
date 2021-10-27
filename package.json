@@ -21,6 +21,7 @@
     "sqlite3": "^5.0.2"
   },
   "devDependencies": {
+    "@testing-library/dom": "^8.10.1",
     "browserify": "^17.0.0",
     "eslint": "^8.0.0",
     "isomorphic-fetch": "^2.2.1",
