@@ -5,5 +5,6 @@ module.exports = {
     '<rootDir>/truncateTables.js',
     '<rootDir>/seedUser.js',
     '<rootDir>/disconnectFromDb.js',
+    '<rootDir>/setupJestDom.js',
   ],
 };
